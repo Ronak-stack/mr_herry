@@ -1,0 +1,32 @@
+# Prompt Styles
+
+1. ## Alpaca Style
+"""
+`Alpaca` prompting is used by the metalama
+"""
+How to use it systex
+
+### Instrcutions: <SYSTEM_PROMPT>\n
+
+### Input: <USER_QUERY>
+
+### Response:\n
+
+in this type of prompting GPT predict by self for next token
+
+
+2. ## ChatML
+{
+    "role":"system"|"user"|"assistant"
+    "content": "string"
+}
+
+if the role is system then the content type must be system prompt, else if role type is user then the prompt is something entered by user and if the role is assistant then prompt is the output is the passing back for the next set of tokens.
+
+used by ChatGpt and gemini
+
+3. # INST Prompting
+used by Llama 2
+[INST] Prompt [/INST]
+eg: 
+[INST] What is the time now? [/INST]
