@@ -11,3 +11,4 @@ class State(BaseModel):
     is_followup:bool
     current_prompt: str
     previous: Previous | None = None
+    user_id:int | None = None

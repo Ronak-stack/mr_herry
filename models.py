@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
-from sqlalchemy.orm import declarative_base, relationship
-from datetime import datetime
-
-Base = declarative_base()
+from datetime import datetime, date, time
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Date, Time, Text, Boolean, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from database import Base
 
 # 👤 Users
 class User(Base):
@@ -11,8 +10,10 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(100))
     email = Column(String(100))
+    active = Column(Boolean, default=True)
 
     orders = relationship("Order", back_populates="user")
+    todos = relationship("Todo", back_populates="user")
 
 
 # 📦 Products
@@ -22,6 +23,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(100))
     price = Column(Float)
+    active = Column(Boolean, default=True)
 
     order_items = relationship("OrderItem", back_populates="product")
 
@@ -49,3 +51,71 @@ class OrderItem(Base):
 
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="order_items")
+
+
+# 📋 Todos
+class Todo(Base):
+    __tablename__ = "todos"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True
+    )
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True
+    )
+
+    title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    due_date: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True
+    )
+
+    due_time: Mapped[time | None] = mapped_column(
+        Time,
+        nullable=True
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending"
+    )
+
+    # FIX: Wrapped CURRENT_TIMESTAMP in text() to prevent MySQL syntax error
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP")
+    )
+
+    # FIX: Wrapped CURRENT_TIMESTAMP in text()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=datetime.utcnow
+    )
+
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+    user = relationship(
+        "User",
+        back_populates="todos"
+    )

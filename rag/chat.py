@@ -1,8 +1,10 @@
 from langchain_openai import OpenAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from openai import OpenAI
+import os
 
-client = OpenAI(api_key="")
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
 
 user_query = input("Ask question:")
 

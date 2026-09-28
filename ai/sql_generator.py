@@ -47,30 +47,43 @@ def validate_sql(prompt, sql, schema, client):
 
     return response.choices[0].message.content.strip()
 
-def generate_sql(prompt, client, engine, memory):
+def generate_sql(state, client, engine):
     schema = get_schema(engine)
-    print(schema)
     from ai.table_selector import select_tables, build_filtered_schema
 
-    selected = select_tables(prompt, schema, client)
-
-    print("SELECTED TABLES:", selected)
+    previous=state.previous if state.is_followup else None
+    selected = select_tables(state.current_prompt, schema, client, previous)
 
     filtered_schema = build_filtered_schema(schema, selected.split(","))
-    plan = create_plan(prompt, filtered_schema, client)
-    print("QUERY PLAN:")
-    print(plan)
+    plan = create_plan(state.current_prompt, filtered_schema, client)
+
+    print("CURRENT PROMPT:", state.current_prompt)
+    print("IS FOLLOWUP:", state.is_followup)
+    print("PREVIOUS:", state.previous)
+
+    if state.is_followup:
+        previous_context = f"""
+            Previous Prompt:
+            {state.previous.prompt}
+
+            Previous Output:
+            {state.previous.output}
+            """
+    else:
+        previous_context = "No previous conversation."
+
+                
     system_prompt = f"""
     You are a SQL expert.
 
     Database schema:
     {filtered_schema}
 
+    Conversation Memory:
+    {previous_context}
+
     Execution Plan:
     {plan}
-
-    Conversation Memory:
-    {memory}
 
     Rules:
     - Use correct tables and columns
@@ -83,21 +96,20 @@ def generate_sql(prompt, client, engine, memory):
     Return only SQL query.
     """
 
+    print("SELECTED TABLES:", selected)
+
+    print("QUERY PLAN:")
+    print(plan)
+
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": state.current_prompt}
         ]
     )
 
     return response.choices[0].message.content.strip()
-    # return "SELECT salary FROM users"
-#     return """
-# select id, name, email
-# from users
-# where lower(name) like '%amit%'
-# """
 
 def get_tables(engine):
     query = "SHOW TABLES"

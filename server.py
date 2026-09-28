@@ -5,14 +5,11 @@ from dotenv import load_dotenv
 from fastapi.background import BackgroundTasks
 from sqlalchemy import create_engine
 
-from ai.decision import decide_flow
-from ai.intent_router import detect_intent
-
-# load handlers
-from ai.handlers.sql_handler import handle_sql
+from schemas.ask_schema import AskRequest
 
 from ai.context_resolver import resolve_context
 from memory.context_store import get_memory
+from ai.pipeline import process_request
 
 engine = create_engine("mysql+pymysql://root:@localhost:3306/bot_db")
 
@@ -24,34 +21,17 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app = FastAPI()
 
 # 🤖 AI endpoint
-@app.get("/ask")
-def ask_ai(prompt: str, background_tasks: BackgroundTasks):
-    intent = detect_intent(prompt, client)
-    flow = decide_flow(prompt,client)
-
-    try:
-        memory = get_memory()
-        result = resolve_context(
-        current_prompt="show email also",
-        memory=memory,
-        client=client
+@app.post("/ask")
+def ask_ai(
+    request: AskRequest,
+    background_tasks: BackgroundTasks
+):
+    return process_request(
+        prompt=request.prompt,
+        client=client,
+        engine=engine,
+        background_tasks=background_tasks
     )
-        context = resolve_context(prompt,memory,client)
-        print(f"context:{context}")
-
-        if intent == "SQL":
-            return handle_sql(
-                prompt,
-                client,
-                engine,
-                background_tasks,
-                flow
-            )
-
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
 
 # @app.get('/xlsx')
 # async def renderExcel():
@@ -75,7 +55,7 @@ async def katterl_story_project():
 
 @app.get('/debug/memory')
 def test_context():
-
+    print ("Hello world")
     memory = get_memory()
     result = resolve_context(
         current_prompt="show email also",
@@ -84,3 +64,8 @@ def test_context():
     )
 
     return result
+
+@app.get('/image')
+def check_image():
+    from image.main import image_checker
+    image_checker()

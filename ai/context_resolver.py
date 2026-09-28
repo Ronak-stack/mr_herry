@@ -35,8 +35,15 @@ def resolve_context(
                     }}
 
                     Rules:
-                    - Return only json.
-                    - No explanation
+                        - First determine which previous conversations are relevant to the current prompt.
+                        - If multiple previous conversations are relevant, select the most recent relevant conversation.
+                        - Prefer the highest memory index only among conversations that are relevant.
+                        - If no previous conversation is relevant, return is_followup as false and memory_index as null.
+                        - Return only JSON.
+                        - No explanation.
+                        - No explanation
+                        - If multiple conversations can relate to the current prompt, always select the most recent relevant conversation.
+                        - Prefer the highest memory index among relevant conversations.
                 """
     user_prompt = f"""
                 Conversation History:

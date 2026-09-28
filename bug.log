@@ -1,0 +1,12 @@
+BUG:
+Follow-up aggregation can expand beyond the current conversation entity.
+
+Example:
+Show all active products
+→ How many are there exactly inactive and active both?
+
+Expected:
+products only
+
+Actual:
+products + users

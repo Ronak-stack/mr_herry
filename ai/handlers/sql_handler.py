@@ -11,19 +11,18 @@ from ai.sql_validator import validate_sql
 from ai.sql_fixer import fix_sql
 from ai.runtime_fixer import fix_runtime_sql
 from utils.db import execute_sql
+from ai.decision import decide_flow
 
 def handle_sql(
     state,
     client,
     engine,
-    background_tasks,
-    flow
+    background_tasks
 ):
     prompt = state.current_prompt
-    memory = get_memory()
-    print("MEMORY:", memory)
-    
-    sql = generate_sql(prompt,client, engine, memory)
+    flow = decide_flow(prompt, client)
+
+    sql = generate_sql(state,client, engine)
     
     cleaned_sql = clean_sql(sql)
 
